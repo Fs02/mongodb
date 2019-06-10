@@ -15,6 +15,13 @@ defmodule Mongo.ConnectionTest do
     pid
   end
 
+  defp connect_auth_empty do
+    assert {:ok, pid} =
+           Mongo.start_link(hostname: "localhost", database: "mongodb_test",
+                                 username: "", password: "")
+    pid
+  end
+
   defp connect_auth_on_db do
     assert {:ok, pid} =
            Mongo.start_link(hostname: "localhost", database: "mongodb_test",
@@ -46,6 +53,13 @@ defmodule Mongo.ConnectionTest do
 
   test "auth" do
     pid = connect_auth()
+    {:ok, conn, _, _} = Mongo.select_server(pid, :read)
+    assert {:ok, %{docs: [%{"ok" => 1.0}]}} =
+           Mongo.raw_find(conn, "$cmd", %{ping: 1}, %{}, [batch_size: 1])
+  end
+
+  test "auth empty" do
+    pid = connect_auth_empty()
     {:ok, conn, _, _} = Mongo.select_server(pid, :read)
     assert {:ok, %{docs: [%{"ok" => 1.0}]}} =
            Mongo.raw_find(conn, "$cmd", %{ping: 1}, %{}, [batch_size: 1])
